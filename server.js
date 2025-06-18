@@ -49,8 +49,13 @@ const listingSchema = new mongoose.Schema({
 const Listing = mongoose.model("Listing", listingSchema);
 
 app.get("/api/listings", async (req, res) => {
-  const listings = await Listing.find();
-  res.send(listings);
+  try {
+    const listings = await Listing.find();
+    res.send(listings);
+  } catch (err) {
+    console.error("Error fetching listings:", err);
+    res.status(500).send("Error fetching listings");
+  }
 });
 
 
