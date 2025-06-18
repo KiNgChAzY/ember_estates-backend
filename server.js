@@ -252,12 +252,10 @@ app.put("/api/listings/:id", upload.single("img"), (req, res) => {
 
 app.delete("/api/listings/:id", (req, res) => {
   const listing = listings.find((l) => l._id === parseInt(req.params.id));
-
   if (!listing) {
     res.status(404).send("The listing you wanted to delete is unavailable");
     return;
   }
-
   const index = listings.indexOf(listing);
   listings.splice(index, 1);
   res.status(200).send(listing);
