@@ -77,13 +77,13 @@ app.post("/api/listings", upload.single("img"), async (req, res) => {
     }
     const newListing = await listing.save();
     res.status(200).send(newListing);
-  } catch (err) {
-    console.error("Server error:", err);
-    res.status(500).send("Server error: " + err.message);
+  } catch {
+    console.log("error");
   }
 });
 
 app.put("/api/listings/:id", upload.single("img"), async (req, res) => {
+  console.log("test");
   const isValidUpdate = validateListing(req.body);
   if (isValidUpdate.error) {
     console.log("Invalid Info");
@@ -99,7 +99,7 @@ app.put("/api/listings/:id", upload.single("img"), async (req, res) => {
     square_feet: req.body.square_feet,
     property_type: req.body.property_type,
     year_built: req.body.year_built,
-    features: req.body.features ? JSON.parse(req.body.features) : [],
+    features: req.body.features ? req.body.features.split(",") : [],
     description: req.body.description,
   };
   if (req.file) {
