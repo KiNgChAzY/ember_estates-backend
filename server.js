@@ -19,10 +19,9 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-
 mongoose
   .connect(
-    "mongodb+srv://chasemccracken:WEhHGbHH1BMDTyJl@emberestates.8ip0faq.mongodb.net/?retryWrites=true&w=majority&appName=EmberEstates"
+    "mongodb+srv://chasemccracken111:WEhHGbHH1BMDTyJl@emberestates.8ip0faq.mongodb.net/?retryWrites=true&w=majority&appName=EmberEstates"
   )
   .then(() => {
     console.log("connected to mongodb");
@@ -30,7 +29,6 @@ mongoose
   .catch((error) => {
     console.log("couldn't connect to mongodb", error);
   });
-
 
 const listingSchema = new mongoose.Schema({
   title: String,
@@ -49,42 +47,41 @@ const listingSchema = new mongoose.Schema({
 const Listing = mongoose.model("Listing", listingSchema);
 
 app.get("/api/listings", async (req, res) => {
-  try {
-    const listings = await Listing.find();
-    res.send(listings);
-  } catch (err) {
-    console.error("Error fetching listings:", err);
-    res.status(500).send("Error fetching listings");
-  }
+  const listings = await Listing.find();
+  res.send(listings);
 });
-
 
 app.post("/api/listings", upload.single("img"), async (req, res) => {
-  const isValidListing = validateListing(req.body);
-  if (isValidListing.error) {
-    console.log("Invalid listing");
-    res.status(400).send(isValidListing.error.details[0].message);
-    return;
+  try {
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
+    const isValidListing = validateListing(req.body);
+    if (isValidListing.error) {
+      console.log("Invalid listing", isValidListing.error.details);
+      return res.status(400).send(isValidListing.error.details[0].message);
+    }
+    const listing = new Listing({
+      title: req.body.title,
+      price: req.body.price,
+      address: req.body.address,
+      bedrooms: req.body.bedrooms,
+      bathrooms: req.body.bathrooms,
+      square_feet: req.body.square_feet,
+      property_type: req.body.property_type,
+      year_built: req.body.year_built,
+      features: req.body.features ? JSON.parse(req.body.features) : [],
+      description: req.body.description,
+    });
+    if (req.file) {
+      listing.img_name = req.file.filename;
+    }
+    const newListing = await listing.save();
+    res.status(200).send(newListing);
+  } catch (err) {
+    console.error("Server error:", err);
+    res.status(500).send("Server error: " + err.message);
   }
-  const listing = new Listing({
-    title: req.body.title,
-    price: req.body.price,
-    address: req.body.address,
-    bedrooms: req.body.bedrooms,
-    bathrooms: req.body.bathrooms,
-    square_feet: req.body.square_feet,
-    property_type: req.body.property_type,
-    year_built: req.body.year_built,
-    features: req.body.features ? JSON.parse(req.body.features) : [],
-    description: req.body.description,
-  });
-  if (req.file) {
-    listing.img_name = req.file.filename;
-  }
-  const newListing = await listing.save();
-  res.status(200).send(newListing);
 });
-
 
 app.put("/api/listings/:id", upload.single("img"), async (req, res) => {
   const isValidUpdate = validateListing(req.body);
@@ -108,7 +105,10 @@ app.put("/api/listings/:id", upload.single("img"), async (req, res) => {
   if (req.file) {
     fieldsToUpdate.img_name = req.file.filename;
   }
-  const success = await Listing.updateOne({ _id: req.params.id }, fieldsToUpdate);
+  const success = await Listing.updateOne(
+    { _id: req.params.id },
+    fieldsToUpdate
+  );
   if (!success) {
     res.status(404).send("The listing you wanted to edit is unavailable");
     return;
@@ -116,7 +116,6 @@ app.put("/api/listings/:id", upload.single("img"), async (req, res) => {
   const updatedListing = await Listing.findById(req.params.id);
   res.status(200).send(updatedListing);
 });
-
 
 app.delete("/api/listings/:id", async (req, res) => {
   const listing = await Listing.findByIdAndDelete(req.params.id);
